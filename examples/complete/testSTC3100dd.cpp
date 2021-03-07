@@ -26,7 +26,7 @@ USE_RTCLIB  rtcExtPhy;
     #define SERIAL_PORT_USBVIRTUAL Serial
 #endif
 
-STC3100  battMon(STC3100_REG_MODE_ADCRES_14BITS,STC3100_R_SERIES_mOhms); 
+STC3100dd  battMon(STC3100_REG_MODE_ADCRES_14BITS,STC3100_R_SERIES_mOhms); 
 uint32_t  counter =0;
 
 #if defined USE_RTCLIB 

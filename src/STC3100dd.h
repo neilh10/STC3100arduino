@@ -92,7 +92,7 @@ static const uint8_t CRC_LOOKUP[256] = {
   0xE6, 0xE1, 0xE8, 0xEF, 0xFA, 0xFD, 0xF4, 0xF3
 };
 
-class STC3100
+class STC3100dd
 {
   public: 
 
@@ -116,7 +116,7 @@ class STC3100
  * @param resistor_value The value of the current sensing resistor in milliOhms
  * @param sample_rate The value of the sampling rate
  */
-  STC3100( uint8_t sample_rate=STC3100_REG_MODE_ADCRES_14BITS, uint16_t resistor_batValuesalue=STC3100_R_SERIES_mOhms);
+  STC3100dd( uint8_t sample_rate=STC3100_REG_MODE_ADCRES_14BITS, uint16_t resistor_batValuesalue=STC3100_R_SERIES_mOhms);
   
   /**
  * @brief init - call at beginning, before start()
