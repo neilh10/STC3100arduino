@@ -50,11 +50,16 @@ const int8_t powerPin = 22;
 #define PowerOff()  digitalWrite(powerPin, LOW)
 #endif //USE_POWER
 
+#if !defined SERIAL_BAUD
+#define SERIAL_BAUD 115200
+#endif //SERIAL_BAUD
 void setup(void) {
 
+
+    SERIAL.begin(SERIAL_BAUD);
+
     // Enter <CR> to start
-    SERIAL.begin(115200);
-    while (!SERIAL.available());
+    //while (!SERIAL.available());
 
     SERIAL.println("STC3100 Raw Data");
 

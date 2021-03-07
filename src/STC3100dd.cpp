@@ -37,15 +37,20 @@ bool STC3100dd::start(){
     if(!readSerialNumber(serial_number)){
         return false;
     }
+    #if defined STC3100_DEBUG
     Serial.print("STC3100dd STC3100_REG_CTRL 0x");
     Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
+    #endif // STC3100_DEBUG
+    
     // CG_RST=1 ~ ensure charge is cleared.
     writeByteWire(STC3100_REG_CTRL, 0x02);
     // Start gauge -Clock AutoDetect, ADC=14Bits, CG_RUN=1
     writeByteWire(STC3100_REG_MODE, 0x10); //Set to operate
 
+    #if defined STC3100_DEBUG
     Serial.print("STC3100dd After initCTL 0x");
     Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
+    #endif // STC3100_DEBUG
 
     return true;
 }
