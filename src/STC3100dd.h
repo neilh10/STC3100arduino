@@ -52,10 +52,18 @@
 #define STC3100_VFACTOR 0.00244
 #define STC3100_TEMPERATURE_FACTOR 0.125
 
-#define STC3100_REG_MODE_ADCRES_POS 1
-#define STC3100_REG_MODE_ADCRES_14BITS 00
-#define STC3100_REG_MODE_ADCRES_13BITS 01
-#define STC3100_REG_MODE_ADCRES_12BITS 10
+#define STC3100_REG_MODE_ADC_RES_OFFSET  0x01 /* Mode GG_RES (ADC) bit start   */
+
+#define STC3100_REG_MODE_ADCRES_POS   0x01
+#define STC3100_REG_MODE_ADCRES_MASK  0x03 /* ADC bit mask */
+#define STC3100_REG_MODE_ADCRES_14BITS  00
+#define STC3100_REG_MODE_ADCRES_13BITS  01
+#define STC3100_REG_MODE_ADCRES_12BITS  10
+
+#define STC3100_REG_MODE_RUN_MASK     0x10
+
+#define STC3100_REG_CTRL_IO0DATA_MASK  0x01
+#define STC3100_REG_CTRL_RST_MASK      0x02
 
 static const uint8_t CRC_LOOKUP[256] = {
   0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15,
@@ -132,9 +140,15 @@ class STC3100dd
  * @return true When serial is read and confirmed else false
  */
   bool start();
-//FUT  bool standby(); //set to standby mode
-//FUT  void    setAdcResolution(uint8_t adcResolution=STC3100_REG_MODE_ADCRES_14BITS);
-//FUT  uint8_t getAdcResolution();
+
+  void    setAdcResolution(uint8_t adc_resolution=STC3100_REG_MODE_ADCRES_14BITS);
+  uint8_t getAdcResolution() {return _adc_resolution;}
+
+  void    setModeOperateRun() {_operate=true;}
+  void    setModeOperateStandby() {_operate=false;}
+  uint8_t getModeOperate() {return _operate;}
+
+  uint8_t updateModeReg();
 
   fgValues_t readValues();
 
@@ -282,8 +296,8 @@ The temperature of 0° C corresponds to code 0.
   uint16_t get2BytesBuf();
 
   uint16_t _current_resistor_milliohms = STC3100_R_SERIES_mOhms;
-  uint16_t _adc_resolution = 0;
-  bool _running = false;
+  uint8_t _adc_resolution = 0;
+  bool _operate = true;
 };
 
 #endif //STC3100dd_H

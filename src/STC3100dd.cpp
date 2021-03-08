@@ -25,8 +25,9 @@ battery capacity = reference value + charge register content.
 consumption when the battery is not charging (negative current)
 */
 
-STC3100dd::STC3100dd(uint8_t sample_rate, uint16_t resistor_value){
+STC3100dd::STC3100dd(uint8_t adc_resolution, uint16_t resistor_value){
     _current_resistor_milliohms = resistor_value;
+    _adc_resolution = (adc_resolution & STC3100_REG_MODE_ADCRES_MASK);
 }
 
 void STC3100dd::init(){
@@ -43,9 +44,9 @@ bool STC3100dd::start(){
     #endif // STC3100_DEBUG
     
     // CG_RST=1 ~ ensure charge is cleared.
-    writeByteWire(STC3100_REG_CTRL, 0x02);
-    // Start gauge -Clock AutoDetect, ADC=14Bits, CG_RUN=1
-    writeByteWire(STC3100_REG_MODE, 0x10); //Set to operate
+    writeByteWire(STC3100_REG_CTRL, STC3100_REG_CTRL_RST_MASK|STC3100_REG_CTRL_IO0DATA_MASK);
+
+    updateModeReg();
 
     #if defined STC3100_DEBUG
     Serial.print("STC3100dd After initCTL 0x");
@@ -53,6 +54,18 @@ bool STC3100dd::start(){
     #endif // STC3100_DEBUG
 
     return true;
+}
+
+void STC3100dd::setAdcResolution(uint8_t adc_resolution){
+    _adc_resolution = (adc_resolution & STC3100_REG_MODE_ADCRES_MASK);
+}
+
+uint8_t STC3100dd::updateModeReg() {
+    // Start gauge -Clock AutoDetect, ADC, CG_RUN
+    uint8_t regWr = (_operate) ? STC3100_REG_MODE_RUN_MASK  : 0;
+    regWr |=  (_adc_resolution<<STC3100_REG_MODE_ADCRES_POS);
+    writeByteWire(STC3100_REG_MODE, regWr); 
+    return regWr;
 }
 
 STC3100dd::fgValues_t STC3100dd::readValues(){
@@ -140,13 +153,11 @@ uint16_t STC3100dd::getReadingWire(uint8_t reg){
 uint16_t STC3100dd::get2BytesBuf() {
     uint8_t low =  Wire.read();         // print the character
     uint8_t high = Wire.read();
-    //uint16_t high_byte  = high;
     uint16_t value = low;
     value |= high<<8;
     return value;
 }
 
-/* FUT not tested */
 void STC3100dd::writeByteWire(uint8_t reg, uint8_t value){
     Wire.beginTransmission(BUS_ADDRESS);
     Wire.write(reg);
