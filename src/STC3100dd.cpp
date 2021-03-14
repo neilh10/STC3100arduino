@@ -77,10 +77,10 @@ uint8_t STC3100dd::updateModeReg() {
 
 STC3100dd::fgValues_t STC3100dd::readValues(){
 
-    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->beginTransmission(_i2cAddressHex);
     _i2c->write(STC3100_REG_CHARGE_LOW);
     _i2c->endTransmission();
-    _i2c->requestFrom(BUS_ADDRESS, STC3100_REG_LEN );
+    _i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
     
     v.valid = true;
     v.charge_raw = get2BytesBuf();
@@ -124,10 +124,10 @@ float STC3100dd::readTemperature_C(){
 }
 
 bool STC3100dd::readSerialNumber(uint8_t *serialNum){
-    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->beginTransmission(_i2cAddressHex);
     _i2c->write(STC3100_REG_ID0);
     _i2c->endTransmission();
-    _i2c->requestFrom(BUS_ADDRESS, 8);
+    _i2c->requestFrom(_i2cAddressHex, 8);
     for(uint16_t i =0; i< STC3100_ID_LEN; i++){
         serialNum[i] = _i2c->read();
     }
@@ -135,10 +135,10 @@ bool STC3100dd::readSerialNumber(uint8_t *serialNum){
 }
 
 void STC3100dd::getAllReg(uint8_t *dataReg){
-    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->beginTransmission(_i2cAddressHex);
     _i2c->write(STC3100_REG_CHARGE_LOW);
     _i2c->endTransmission();
-    _i2c->requestFrom(BUS_ADDRESS, STC3100_REG_LEN);
+    _i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN);
     for(uint16_t i =0; i< STC3100_REG_LEN; i++){
         dataReg[i] = _i2c->read();
     }
@@ -146,10 +146,10 @@ void STC3100dd::getAllReg(uint8_t *dataReg){
 } 
 
 uint16_t STC3100dd::getReadingWire(uint8_t reg){
-    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->beginTransmission(_i2cAddressHex);
     _i2c->write(reg);
     _i2c->endTransmission();
-    _i2c->requestFrom(BUS_ADDRESS, 2);
+    _i2c->requestFrom(_i2cAddressHex, 2);
     uint8_t low =  _i2c->read();         // print the character
     uint8_t high = _i2c->read();
     uint16_t value = low;
@@ -166,7 +166,7 @@ uint16_t STC3100dd::get2BytesBuf() {
 }
 
 void STC3100dd::writeByteWire(uint8_t reg, uint8_t value){
-    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->beginTransmission(_i2cAddressHex);
     _i2c->write(reg);
     _i2c->write(value);
     _i2c->endTransmission();

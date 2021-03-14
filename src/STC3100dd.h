@@ -40,7 +40,7 @@
 // RAM registers go up to 31 address 63 for 32 ram bytes
 #define STC3100_REG_RAM0  0x20  
 
-#define BUS_ADDRESS 0x70
+#define STC3100_BUS_ADDRESS 0x70
 
 #define STC3100_ID_LEN 8
 #define STC3100_REG_LEN 10
@@ -127,11 +127,19 @@ class STC3100dd
   STC3100dd( uint8_t sample_rate=STC3100_REG_MODE_ADCRES_14BITS, uint16_t resistor_batValuesalue=STC3100_R_SERIES_mOhms);
   STC3100dd(TwoWire* theI2C, uint8_t sample_rate=STC3100_REG_MODE_ADCRES_14BITS, uint16_t resistor_batValuesalue=STC3100_R_SERIES_mOhms);
   /**
+ * @brief  setI2cAddress- call at beginning if need to change 
+ * There only appears to be one IC that is commercially available,
+ * but a number of IC addresses are defined in the manual
+ * 
+ */
+  #if defined STC3100_USE_ADDR
+  void setI2cAddress(int8_t i2cAddressHex=STC3100_BUS_ADDRESS) {_i2cAddressHex=i2cAddressHex;}
+  #endif // STC3100_USE_ADDR
+ /**
  * @brief init - call at beginning, before start()
  * 
  */
   void init();
-  
   /**
  * @brief start() will check if it can read and confirm the serial number. 
  * If the serial number can be read and confirmed, this function will set the
@@ -303,6 +311,17 @@ The temperature of 0° C corresponds to code 0.
    * @brief An internal reference to the hardware Wire instance.
    */
   TwoWire* _i2c;  // Hardware Wire
+
+  /**
+   * @brief The I2C address of the STC3100.
+   * 
+   * There only appears to be one IC that is commercially available,
+   * but a number of IC addresses are defined in the manual
+   */
+  #if !defined STC3100_USE_ADDR
+    const 
+  #endif //STC3100_USE_ADDR
+   int8_t _i2cAddressHex=STC3100_BUS_ADDRESS;
   
 };
 
