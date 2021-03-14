@@ -136,10 +136,10 @@ class STC3100dd
   void setI2cAddress(int8_t i2cAddressHex=STC3100_BUS_ADDRESS) {_i2cAddressHex=i2cAddressHex;}
   #endif // STC3100_USE_ADDR
  /**
- * @brief init - call at beginning, before start()
+ * @brief begin - call at beginning, before start()
  * 
  */
-  void init();
+  void begin();
   /**
  * @brief start() will check if it can read and confirm the serial number. 
  * If the serial number can be read and confirmed, this function will set the

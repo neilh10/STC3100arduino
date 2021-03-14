@@ -37,7 +37,7 @@ STC3100dd::STC3100dd(TwoWire* theI2C, uint8_t adc_resolution, uint16_t resistor_
     _adc_resolution = (adc_resolution & STC3100_REG_MODE_ADCRES_MASK);
 }
 
-void STC3100dd::init(){
+void STC3100dd::begin(){
     _i2c->begin();
 }
 
