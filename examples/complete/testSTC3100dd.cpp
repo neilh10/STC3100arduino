@@ -95,12 +95,8 @@ void setup(void) {
     #endif //USE_POWER
 }
 
-//STC3100::batteryReadings_t batValues;
-void loop(void) {
-
+void measureBattery() {
     battMon.readValues();
-    counter++;
-
     #if defined USE_RTCLIB 
     DateTime time_dt =getNowSecs2kTz();//2000
     String dateTimeStr;
@@ -125,15 +121,30 @@ void loop(void) {
     SERIAL.print(battMon.v.charge_raw,HEX);
     SERIAL.println();
 
+}
+//STC3100::batteryReadings_t batValues;
+
+    //with 10,000 Every 20passes the above takes 1second longer - try 9,950
+    // with 9,950 EVery 300=458-150 only takes 9Secs 300*10sec=3,000secs - try 9,940
+#define MEASUREMENT_POLL  9940
+void loop(void) {
+
+
+    counter++;
+
     #if defined USE_POWER
     if (counter &0x01) {
+        SERIAL.println("Power ON");
         PowerOn();
     }else {
+        SERIAL.println("Power OFF");
         PowerOff();
     }
     #endif //USE_POWER
+    delay(MEASUREMENT_POLL/2);
+    measureBattery();
+    delay(MEASUREMENT_POLL/2);
+    measureBattery();
 
-    delay(9940);  //10sec 9940
-    //with 10,000 Every 20passes the above takes 1second longer - try 9,950
-    // with 9,950 EVery 300=458-150 only takes 9Secs 300*10sec=3,000secs - try 9,940
+
 }
