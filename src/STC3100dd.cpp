@@ -26,12 +26,19 @@ consumption when the battery is not charging (negative current)
 */
 
 STC3100dd::STC3100dd(uint8_t adc_resolution, uint16_t resistor_value){
+    _i2c           = &Wire;
+    _current_resistor_milliohms = resistor_value;
+    _adc_resolution = (adc_resolution & STC3100_REG_MODE_ADCRES_MASK);
+}
+
+STC3100dd::STC3100dd(TwoWire* theI2C, uint8_t adc_resolution, uint16_t resistor_value){
+    _i2c           = theI2C;
     _current_resistor_milliohms = resistor_value;
     _adc_resolution = (adc_resolution & STC3100_REG_MODE_ADCRES_MASK);
 }
 
 void STC3100dd::init(){
-    Wire.begin();
+    _i2c->begin();
 }
 
 bool STC3100dd::start(){
@@ -70,10 +77,10 @@ uint8_t STC3100dd::updateModeReg() {
 
 STC3100dd::fgValues_t STC3100dd::readValues(){
 
-    Wire.beginTransmission(BUS_ADDRESS);
-    Wire.write(STC3100_REG_CHARGE_LOW);
-    Wire.endTransmission();
-    Wire.requestFrom(BUS_ADDRESS, STC3100_REG_LEN );
+    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->write(STC3100_REG_CHARGE_LOW);
+    _i2c->endTransmission();
+    _i2c->requestFrom(BUS_ADDRESS, STC3100_REG_LEN );
     
     v.valid = true;
     v.charge_raw = get2BytesBuf();
@@ -117,52 +124,52 @@ float STC3100dd::readTemperature_C(){
 }
 
 bool STC3100dd::readSerialNumber(uint8_t *serialNum){
-    Wire.beginTransmission(BUS_ADDRESS);
-    Wire.write(STC3100_REG_ID0);
-    Wire.endTransmission();
-    Wire.requestFrom(BUS_ADDRESS, 8);
+    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->write(STC3100_REG_ID0);
+    _i2c->endTransmission();
+    _i2c->requestFrom(BUS_ADDRESS, 8);
     for(uint16_t i =0; i< STC3100_ID_LEN; i++){
-        serialNum[i] = Wire.read();
+        serialNum[i] = _i2c->read();
     }
     return crc8calc(serialNum, 7)==serialNum[7];
 }
 
 void STC3100dd::getAllReg(uint8_t *dataReg){
-    Wire.beginTransmission(BUS_ADDRESS);
-    Wire.write(STC3100_REG_CHARGE_LOW);
-    Wire.endTransmission();
-    Wire.requestFrom(BUS_ADDRESS, STC3100_REG_LEN);
+    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->write(STC3100_REG_CHARGE_LOW);
+    _i2c->endTransmission();
+    _i2c->requestFrom(BUS_ADDRESS, STC3100_REG_LEN);
     for(uint16_t i =0; i< STC3100_REG_LEN; i++){
-        dataReg[i] = Wire.read();
+        dataReg[i] = _i2c->read();
     }
     return ;
 } 
 
 uint16_t STC3100dd::getReadingWire(uint8_t reg){
-    Wire.beginTransmission(BUS_ADDRESS);
-    Wire.write(reg);
-    Wire.endTransmission();
-    Wire.requestFrom(BUS_ADDRESS, 2);
-    uint8_t low =  Wire.read();         // print the character
-    uint8_t high = Wire.read();
+    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->write(reg);
+    _i2c->endTransmission();
+    _i2c->requestFrom(BUS_ADDRESS, 2);
+    uint8_t low =  _i2c->read();         // print the character
+    uint8_t high = _i2c->read();
     uint16_t value = low;
     value |= high<<8;
     return value;
 }
 
 uint16_t STC3100dd::get2BytesBuf() {
-    uint8_t low =  Wire.read();         // print the character
-    uint8_t high = Wire.read();
+    uint8_t low =  _i2c->read();         // print the character
+    uint8_t high = _i2c->read();
     uint16_t value = low;
     value |= high<<8;
     return value;
 }
 
 void STC3100dd::writeByteWire(uint8_t reg, uint8_t value){
-    Wire.beginTransmission(BUS_ADDRESS);
-    Wire.write(reg);
-    Wire.write(value);
-    Wire.endTransmission();
+    _i2c->beginTransmission(BUS_ADDRESS);
+    _i2c->write(reg);
+    _i2c->write(value);
+    _i2c->endTransmission();
 }
 
 uint8_t STC3100dd::crc8calc(const void * data, size_t size){

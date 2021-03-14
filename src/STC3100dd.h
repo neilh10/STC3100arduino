@@ -125,7 +125,7 @@ class STC3100dd
  * @param sample_rate The value of the sampling rate
  */
   STC3100dd( uint8_t sample_rate=STC3100_REG_MODE_ADCRES_14BITS, uint16_t resistor_batValuesalue=STC3100_R_SERIES_mOhms);
-  
+  STC3100dd(TwoWire* theI2C, uint8_t sample_rate=STC3100_REG_MODE_ADCRES_14BITS, uint16_t resistor_batValuesalue=STC3100_R_SERIES_mOhms);
   /**
  * @brief init - call at beginning, before start()
  * 
@@ -298,6 +298,12 @@ The temperature of 0° C corresponds to code 0.
   uint16_t _current_resistor_milliohms = STC3100_R_SERIES_mOhms;
   uint8_t _adc_resolution = 0;
   bool _operate = true;
+
+  /**
+   * @brief An internal reference to the hardware Wire instance.
+   */
+  TwoWire* _i2c;  // Hardware Wire
+  
 };
 
 #endif //STC3100dd_H
