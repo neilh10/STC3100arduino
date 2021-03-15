@@ -161,7 +161,7 @@ class STC3100dd
   String getSn(void);
   String getType() {return  String(serial_number[0],HEX);}
 
-  fgValues_t readValues();
+  uint8_t readValues();
 
 /**
  * @brief Gets the current battery voltage

@@ -84,21 +84,24 @@ uint8_t STC3100dd::updateModeReg() {
     return regWr;
 }
 
-STC3100dd::fgValues_t STC3100dd::readValues(){
+uint8_t STC3100dd::readValues(){
+    uint8_t status;
 
     _i2c->beginTransmission(_i2cAddressHex);
     _i2c->write(STC3100_REG_CHARGE_LOW);
-    _i2c->endTransmission();
-    _i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
-    
-    v.valid = true;
-    v.charge_raw = get2BytesBuf();
-    v.charge_mAhr = (float) rawToCharge_mAhr(v.charge_raw);
-    v.counter = get2BytesBuf();
-    v.current_mA = rawToCurrent_mA(get2BytesBuf());
-    v.voltage_V = get2BytesBuf() * STC3100_VFACTOR;
-    v.temperature_C = rawToTemperature_C(get2BytesBuf());
-    return v;
+    status = _i2c->endTransmission();
+    if (0 == status) {
+        _i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
+        
+        v.valid = true;
+        v.charge_raw = get2BytesBuf();
+        v.charge_mAhr = (float) rawToCharge_mAhr(v.charge_raw);
+        v.counter = get2BytesBuf();
+        v.current_mA = rawToCurrent_mA(get2BytesBuf());
+        v.voltage_V = get2BytesBuf() * STC3100_VFACTOR;
+        v.temperature_C = rawToTemperature_C(get2BytesBuf());
+    } 
+    return status;
 }
 
 float STC3100dd::rawToCharge_mAhr(uint16_t rawReg) {

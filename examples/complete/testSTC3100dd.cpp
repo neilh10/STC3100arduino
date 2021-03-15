@@ -94,7 +94,7 @@ void setup(void) {
 }
 
 void measureBattery() {
-    battMon.readValues();
+
     #if defined USE_RTCLIB 
     DateTime time_dt =getNowSecs2kTz();//2000
     String dateTimeStr;
@@ -102,7 +102,11 @@ void measureBattery() {
     SERIAL.print(dateTimeStr);
     SERIAL.print(", ");   
     #endif //USE_RTCLIB 
-
+    if (battMon.readValues()) {
+        //0 is pass
+        SERIAL.println(" Failed to get new reading "); 
+        return;     
+    }
     SERIAL.print( counter);
     SERIAL.print(", ");   
     SERIAL.print( battMon.v.counter);
