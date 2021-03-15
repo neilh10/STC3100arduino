@@ -158,6 +158,9 @@ class STC3100dd
 
   uint8_t updateModeReg();
 
+  String getSn(void);
+  String getType() {return  String(serial_number[0],HEX);}
+
   fgValues_t readValues();
 
 /**

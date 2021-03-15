@@ -63,6 +63,15 @@ bool STC3100dd::start(){
     return true;
 }
 
+String STC3100dd::getSn(void)   {
+    String sn;
+    sn.reserve(STC3100_ID_LEN+1);
+    for (int snlp=1;snlp<(STC3100_ID_LEN-1);snlp++) {
+            sn +=String(serial_number[snlp],HEX);
+    }
+    return sn;
+}
+
 void STC3100dd::setAdcResolution(uint8_t adc_resolution){
     _adc_resolution = (adc_resolution & STC3100_REG_MODE_ADCRES_MASK);
 }

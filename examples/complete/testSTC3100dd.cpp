@@ -55,7 +55,6 @@ const int8_t powerPin = 22;
 #endif //SERIAL_BAUD
 void setup(void) {
 
-
     SERIAL.begin(SERIAL_BAUD);
 
     // Enter <CR> to start
@@ -63,15 +62,14 @@ void setup(void) {
 
     SERIAL.println("STC3100 Raw Data");
 
-    battMon.init();  //Wire.begin();
+    battMon.begin();  //Wire.begin();
     bool fStatus = battMon.start();
     if (fStatus) {
         SERIAL.print("STC3100 sn ");
-        for (int snlp=1;snlp<(STC3100_ID_LEN-1);snlp++) {
-            SERIAL.print(battMon.serial_number[snlp],HEX);
-        }
+        String sn(battMon.getSn());
+        SERIAL.print(sn);
         SERIAL.print(" Type ");
-        SERIAL.println(battMon.serial_number[0],HEX);
+        SERIAL.println(battMon.getType());
 
     } else {SERIAL.println("STC3100 start failed");}
 
