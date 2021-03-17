@@ -152,6 +152,9 @@ class STC3100dd
   void    setAdcResolution(uint8_t adc_resolution=STC3100_REG_MODE_ADCRES_14BITS);
   uint8_t getAdcResolution() {return _adc_resolution;}
 
+  void    setCurrentResistor(uint8_t current_resistor_milliohms = STC3100_R_SERIES_mOhms) {_current_resistor_milliohms = current_resistor_milliohms;}
+  uint8_t getCurrentResistor() {return _current_resistor_milliohms;}
+
   void    setModeOperateRun() {_operate=true;}
   void    setModeOperateStandby() {_operate=false;}
   uint8_t getModeOperate() {return _operate;}
