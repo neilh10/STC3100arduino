@@ -312,6 +312,7 @@ The temperature of 0° C corresponds to code 0.
   uint16_t _current_resistor_milliohms = STC3100_R_SERIES_mOhms;
   uint8_t _adc_resolution = 0;
   bool _operate = true;
+  bool _detectedPresent = false;
 
   /**
    * @brief An internal reference to the hardware Wire instance.

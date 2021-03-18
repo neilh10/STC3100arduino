@@ -43,8 +43,12 @@ void STC3100dd::begin(){
 
 bool STC3100dd::start(){
     if(!readSerialNumber(serial_number)){
+        #if defined STC3100_DEBUG
+        Serial.print("STC3100dd device not detected");
+        #endif // STC3100_DEBUG
         return false;
     }
+    _detectedPresent = true;
     #if defined STC3100_DEBUG
     Serial.print("STC3100dd STC3100_REG_CTRL 0x");
     Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
@@ -65,9 +69,13 @@ bool STC3100dd::start(){
 
 String STC3100dd::getSn(void)   {
     String sn;
-    sn.reserve(STC3100_ID_LEN+1);
-    for (int snlp=1;snlp<(STC3100_ID_LEN-1);snlp++) {
-            sn +=String(serial_number[snlp],HEX);
+    if (!_detectedPresent) {
+        sn += String(F("None"));
+    } else {
+        sn.reserve(STC3100_ID_LEN+1);
+        for (int snlp=1;snlp<(STC3100_ID_LEN-2);snlp++) {
+                sn +=String(serial_number[snlp],HEX);
+        }
     }
     return sn;
 }
@@ -100,7 +108,11 @@ uint8_t STC3100dd::readValues(){
         v.current_mA = rawToCurrent_mA(get2BytesBuf());
         v.voltage_V = get2BytesBuf() * STC3100_VFACTOR;
         v.temperature_C = rawToTemperature_C(get2BytesBuf());
-    } 
+    } else {
+        #if defined STC3100_DEBUG
+        Serial.print("STC3100dd readValues not read");
+        #endif // STC3100_DEBUG
+    }
     return status;
 }
 
