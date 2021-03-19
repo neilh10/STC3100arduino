@@ -1,29 +1,17 @@
-/* STC3100dd.h
+/* STC3100dd.cpp
  * This is a battery management STC3100 device driver  
  * decodes voltage, current and charge 
  * Copyright 2020  Neil Hancock
  * 
  * THIS SOURCE CODE IS PROTECTED BY A LICENSE.
- * FOR MORE INFORMATION PLEASE READ THE LICENSE AGREEMENT FILE LOCATED
- * IN THE ROOT DIRECTORY OF THIS FIRMWARE PACKAGE.
+ * FOR MORE INFORMATION PLEASE READ THE "MIT LICENSE" AGREEMENT FILE LOCATED
+ * IN THE ROOT DIRECTORY OF THIS FIRMWARE PACKAGE. LICENSE.md
  * 
  */
 
 #include "STC3100dd.h"
 
-/* From AN3064 3.2 Periodic GasGauge task   ~ tbd functional calls
-At first call, use the battery voltage to estimate the battery’s state-of-charge and save it
-in a RAM location of the STC3100 as a reference value.
 
-● During subsequent calls, use the saved reference value and the present charge
-register content to calculate the present battery capacity:
-battery capacity = reference value + charge register content.
-
-● Trigger a "low battery" alarm if the battery’s voltage is low (typically less than 3.1 V).
-
-● Calculate the remaining operating time from the remaining battery capacity and current
-consumption when the battery is not charging (negative current)
-*/
 
 STC3100dd::STC3100dd(uint8_t adc_resolution, uint16_t resistor_value){
     _i2c           = &Wire;
@@ -43,26 +31,26 @@ void STC3100dd::begin(){
 
 bool STC3100dd::start(){
     if(!readSerialNumber(serial_number)){
-        #if defined STC3100_DEBUG
+        #if defined STC3100DD_DEBUG
         Serial.print("STC3100dd device not detected");
-        #endif // STC3100_DEBUG
+        #endif // STC3100DD_DEBUG
         return false;
     }
     _detectedPresent = true;
-    #if defined STC3100_DEBUG
+    #if defined STC3100DD_DEBUG
     Serial.print("STC3100dd STC3100_REG_CTRL 0x");
     Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
-    #endif // STC3100_DEBUG
+    #endif // STC3100DD_DEBUG
     
     // CG_RST=1 ~ ensure charge is cleared.
     writeByteWire(STC3100_REG_CTRL, STC3100_REG_CTRL_RST_MASK|STC3100_REG_CTRL_IO0DATA_MASK);
 
     updateModeReg();
 
-    #if defined STC3100_DEBUG
+    #if defined STC3100DD_DEBUG
     Serial.print("STC3100dd After initCTL 0x");
     Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
-    #endif // STC3100_DEBUG
+    #endif // STC3100DD_DEBUG
 
     return true;
 }
@@ -109,9 +97,9 @@ uint8_t STC3100dd::readValues(){
         v.voltage_V = get2BytesBuf() * STC3100_VFACTOR;
         v.temperature_C = rawToTemperature_C(get2BytesBuf());
     } else {
-        #if defined STC3100_DEBUG
+        #if defined STC3100DD_DEBUG
         Serial.print("STC3100dd readValues not read");
-        #endif // STC3100_DEBUG
+        #endif // STC3100DD_DEBUG
     }
     return status;
 }
@@ -123,17 +111,23 @@ float STC3100dd::rawToCharge_mAhr(uint16_t rawReg) {
 float STC3100dd::rawToCurrent_mA(uint16_t rawReg) {
     signed current = rawReg & 0x3fff; // mask unused bits
     if (current>=0x2000) current -= 0x4000; // convert to signed value
+
     return ((float)current * STC3100_CURRENT_FACTOR); // result in mA
 } 
 
-float STC3100dd::readCurrent_mA(){
-    uint16_t current_raw =  getReadingWire(STC3100_REG_CURRENT_LOW);
-    return rawToCurrent_mA(current_raw);
+float STC3100dd::getCharge_mAhr(bool pollDevice){
+    if (pollDevice) readValues();
+    return v.charge_mAhr;
 }
 
-float STC3100dd::readVoltage_V(){
-    float v = ((uint16_t) getReadingWire(STC3100_REG_VOLTAGE_LOW) * STC3100_VFACTOR);
-    return v;
+float STC3100dd::getCurrent_mA(bool pollDevice){
+    if (pollDevice) readValues();
+    return v.current_mA;
+}
+
+float STC3100dd::getVoltage_V(bool pollDevice){
+    if (pollDevice) readValues();
+    return v.voltage_V;
 }
 
 float STC3100dd::rawToTemperature_C(uint16_t rawReg){ 
@@ -142,9 +136,9 @@ float STC3100dd::rawToTemperature_C(uint16_t rawReg){
     return (temperature  *STC3100_TEMPERATURE_FACTOR);
 }
 
-float STC3100dd::readTemperature_C(){
-    float t = ((uint16_t)getReadingWire(STC3100_REG_TEMPERATURE_LOW));
-    return t;
+float STC3100dd::getTemperature_C(bool pollDevice){
+    if (pollDevice) readValues();
+    return v.temperature_C;
 }
 
 bool STC3100dd::readSerialNumber(uint8_t *serialNum){

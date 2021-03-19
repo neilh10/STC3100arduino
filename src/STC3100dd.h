@@ -4,8 +4,8 @@
  * Copyright 2020  Neil Hancock
  * 
  * THIS SOURCE CODE IS PROTECTED BY A LICENSE.
- * FOR MORE INFORMATION PLEASE CAREFULLY READ THE LICENSE AGREEMENT FILE LOCATED
- * IN THE ROOT DIRECTORY OF THIS FIRMWARE PACKAGE.
+ * FOR MORE INFORMATION PLEASE READ THE "MIT LICENSE" AGREEMENT FILE LOCATED
+ * IN THE ROOT DIRECTORY OF THIS FIRMWARE PACKAGE. LICENSE.md
  * 
  */
 #ifndef STC3100dd_H
@@ -113,6 +113,9 @@ class STC3100dd
         float voltage_V;
         float temperature_C;
     } fgValues_t;
+    
+    /* Fastest interface is to read from 'v' values */
+
     fgValues_t v;
 
 
@@ -167,26 +170,32 @@ class STC3100dd
   uint8_t readValues();
 
 /**
- * @brief Gets the current battery voltage
+ * @brief Gets the stored charge.
+ * 
+ * @return float last read Charge in mAh
+ */
+  float getCharge_mAhr(bool pollDevice=false);
+
+/**
+ * @brief Gets the current battery voltage - better to read from v.
  * 
  * @return float Battery voltage in Volts
  */
-  float readVoltage_V();
+  float getVoltage_V(bool pollDevice=false);
 
 /**
- * @brief Gets the current reading
+ * @brief Gets the current reading  better to read from v.
  * 
  * @return float Battery Current in milliAmps
  */
-  float readCurrent_mA();
+  float getCurrent_mA(bool pollDevice=false);
 
 /**
  * @brief Gets the current temperature as a float in celsius
  * 
  * @return float Temperature in celsius
  */
-  float readTemperature_C();
-  //FUT uint16_t readCharge_C();
+  float getTemperature_C(bool pollDevice=false);
 
 /**
  * @brief Reads all the data registers
@@ -205,8 +214,7 @@ class STC3100dd
 
   protected:
 
-  private:
-/**
+  /**
  * @brief Processes the charge reading from the raw register
  
 When using an external 30 milliOhms sense resistor, the 28-bit accumulator results in a capacity of 
