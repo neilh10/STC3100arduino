@@ -106,7 +106,7 @@ class STC3100dd
 
   typedef struct{
         bool valid;
-        uint16_t charge_raw;
+        int16_t charge_raw;
         float charge_mAhr;
         uint16_t counter;
         float current_mA;
@@ -233,7 +233,7 @@ The upper 16 bits of the accumulator can be read  giving a resolution of 0.2 mAh
 
   * @return float Battery Charge in milliAmpsHrs
   */
-  float rawToCharge_mAhr(uint16_t rawReg); 
+  float rawToCharge_mAhr(int16_t rawReg); 
 
 /**
   * @brief Processes the current reading from the raw register

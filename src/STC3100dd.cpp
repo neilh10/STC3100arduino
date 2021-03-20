@@ -104,7 +104,7 @@ uint8_t STC3100dd::readValues(){
     return status;
 }
 
-float STC3100dd::rawToCharge_mAhr(uint16_t rawReg) {
+float STC3100dd::rawToCharge_mAhr(int16_t rawReg) {
     return ((float) rawReg) *STC3100_mAHr_FACTOR;
 } 
 

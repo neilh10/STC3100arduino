@@ -11,12 +11,21 @@
 
 #include "STC3100dm.h"
 
-void STC3100dm::dmBegin() {
+uint8_t  STC3100dm::dmBegin() {
     /* Do Battery state initialization, 
     possibly read last state from Stc3100ram
     */
-   readValues(); //Need 1st time through
+   uint8_t status = readValues(); //Need 1st time through
    setEnergyMarker1();
+    #if defined STC3100DM_DEBUG
+    Serial.print(F("STC3100dm dmBegin("));
+    Serial.print(status);
+    Serial.print((":"));
+    Serial.print(v.counter);
+    Serial.print(F(") charge_raw="));
+    Serial.println(_batCharge1_raw,HEX );
+    #endif //STC3100DM_DEBUG
+    return status;
 }
 
 uint8_t STC3100dm::periodicTask() {
@@ -67,10 +76,17 @@ float STC3100dm::getEnergyUsed1_mAhr() {
       */
     #define STC3100_CHARGE_NAX 0x7FFF
     #define STC3100_CHARGE_MIN 0x8000
-
+    #if defined STC3100DM_DEBUG
+    Serial.print(F("STC3100dm energyUsed ["));
+    Serial.print(v.counter);
+    Serial.print(F("] "));
+    Serial.print(v.charge_raw,HEX);
+    Serial.print(F(" - "));
+    Serial.println(_batCharge1_raw,HEX );
+    #endif //STC3100DM_DEBUG
     //if (energyUsed > )
 
-    return getCharge_mAhr(energyUsed);
+    return rawToCharge_mAhr(energyUsed);
 }
 
 float STC3100dm::snapEnergyUsed1_mAhr() {

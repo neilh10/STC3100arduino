@@ -34,7 +34,7 @@ class STC3100dm : public STC3100dd
     /* Only do once at setup, before dmBegin */
     void  setBatteryCapacity_mAh(float batteryCapacity_mAh){_batteryCapacity_mAh = batteryCapacity_mAh;}
     /* Only do once at setup */
-    void  dmBegin();
+    uint8_t  dmBegin();
 
     float snapEnergyUsed1_mAhr();
     void  setEnergyMarker1();
@@ -50,7 +50,7 @@ class STC3100dm : public STC3100dd
 
     private:
     #define STC3100_DM_DEFAULT_BATTERY_MAH 2000
-    uint16_t _batCharge1_raw=0;
+    int16_t _batCharge1_raw=0;
     float    _batteryCapacity_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
     float    _calculatedBatteryCapacityRemaining_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
 };
