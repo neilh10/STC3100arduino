@@ -80,6 +80,8 @@ float STC3100dm::getEnergyUsed1_mAhr() {
     Serial.print(F("STC3100dm energyUsed ["));
     Serial.print(v.counter);
     Serial.print(F("] "));
+    Serial.print(energyUsed,HEX);
+    Serial.print(F("="));
     Serial.print(v.charge_raw,HEX);
     Serial.print(F(" - "));
     Serial.println(_batCharge1_raw,HEX );
