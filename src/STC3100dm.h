@@ -32,7 +32,7 @@ class STC3100dm : public STC3100dd
 {
     public: 
     /* Only do once at setup, before dmBegin */
-    void  setBatteryCapacity_mAh(float batteryCapacity_mAh){_batteryCapacity_mAh = batteryCapacity_mAh;}
+    void setBatteryCapacity_mAh(float batteryCapacity_mAh);
     /* Only do once at setup */
     uint8_t  dmBegin();
 
@@ -40,11 +40,12 @@ class STC3100dm : public STC3100dd
     void  setEnergyMarker1();
     float getEnergyUsed1_mAhr();
 
+    float getEnergyAvlbl_mAhr();
     /* Fut: call periodically ~ 15minutes */
     uint8_t periodicTask();
 
     /* Internal */
-    void  setBatteryFullyCharged(){_calculatedBatteryCapacityRemaining_mAh= _batteryCapacity_mAh;}
+    void  setBatteryFullyCharged();
     float getBatteryCharge_mAh() {return _batteryCapacity_mAh;}
     //uint8_t getBatteryCharge_percent(); // target?
 
@@ -53,6 +54,7 @@ class STC3100dm : public STC3100dd
     int16_t _batCharge1_raw=0;
     float    _batteryCapacity_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
     float    _calculatedBatteryCapacityRemaining_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
+    int8_t chargeDirCounter; //Counts up for +positive charging
 };
 
 #endif // STC3100dm_H

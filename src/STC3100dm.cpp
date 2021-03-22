@@ -33,6 +33,37 @@ uint8_t STC3100dm::periodicTask() {
         Check if battery fully charged - high voltage and low charge current 
         possibly store state to Stc3100ram
     */
+    #if defined STC3100DM_DEBUG
+    Serial.print(F("STC3100dm periodic Cnt="));
+    Serial.print(chargeDirCounter);
+    Serial.print(F(" mA="));
+    Serial.println(v.current_mA  );    
+    #endif //STC3100DM_DEBUG
+   if ((v.current_mA < -0.1) || (v.current_mA > 20) ) {
+       //Discharging ~ or heavilt charging.
+       chargeDirCounter = 0;
+
+   }else {
+       #define STC3100_DM_CHARGE_THRESHOLD_UP_COUNT 2
+            #define STC3100_DM_CHARGE_THRESHOLD_FULL_V 4.2
+            #define STC3100_DM_CURRENT_THRESHOLD_mA 5.0
+       if (++chargeDirCounter>STC3100_DM_CHARGE_THRESHOLD_UP_COUNT) {
+            chargeDirCounter=STC3100_DM_CHARGE_THRESHOLD_UP_COUNT;
+            #if defined STC3100DM_DEBUG
+            Serial.print(F("STC3100dm charged? V="));
+            Serial.print(v.voltage_V );
+            Serial.print(F(" mAhr="));
+            Serial.print(_calculatedBatteryCapacityRemaining_mAh);
+            Serial.print(F(" charge_raw="));
+            Serial.println(_batCharge1_raw,HEX );
+            #endif //STC3100DM_DEBUG
+
+            if ( (v.voltage_V >  STC3100_DM_CHARGE_THRESHOLD_FULL_V)
+            && (v.current_mA < STC3100_DM_CURRENT_THRESHOLD_mA)) {
+                setBatteryFullyCharged();
+            }
+       }
+   }
    return 0; //No event
 }
  
@@ -94,5 +125,20 @@ float STC3100dm::getEnergyUsed1_mAhr() {
 float STC3100dm::snapEnergyUsed1_mAhr() {
     float energyUsed_mAhr = getEnergyUsed1_mAhr();
     setEnergyMarker1();
+    _calculatedBatteryCapacityRemaining_mAh += energyUsed_mAhr;
     return energyUsed_mAhr;
+}
+
+void  STC3100dm::setBatteryCapacity_mAh(float batteryCapacity_mAh){
+    _batteryCapacity_mAh = batteryCapacity_mAh;
+    setBatteryFullyCharged();
+    }
+void  STC3100dm::setBatteryFullyCharged(){
+    _calculatedBatteryCapacityRemaining_mAh= _batteryCapacity_mAh;
+    resetChargeAcc();
+    }
+float STC3100dm::getEnergyAvlbl_mAhr() {
+    //float energyUsed_mAhr = getEnergyUsed1_mAhr();
+    //setEnergyMarker1();
+    return _calculatedBatteryCapacityRemaining_mAh;
 }

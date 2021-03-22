@@ -163,6 +163,7 @@ class STC3100dd
   uint8_t getModeOperate() {return _operate;}
 
   uint8_t updateModeReg();
+  uint8_t resetChargeAcc(); //Reset the charge acc
 
   String getSn(void);
   String getType() {return  String(serial_number[0],HEX);}

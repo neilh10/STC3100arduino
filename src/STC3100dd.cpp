@@ -42,8 +42,8 @@ bool STC3100dd::start(){
     Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
     #endif // STC3100DD_DEBUG
     
-    // CG_RST=1 ~ ensure charge is cleared.
-    writeByteWire(STC3100_REG_CTRL, STC3100_REG_CTRL_RST_MASK|STC3100_REG_CTRL_IO0DATA_MASK);
+    //Reset Charge Acc to 0
+    resetChargeAcc();
 
     updateModeReg();
 
@@ -76,6 +76,13 @@ uint8_t STC3100dd::updateModeReg() {
     // Start gauge -Clock AutoDetect, ADC, CG_RUN
     uint8_t regWr = (_operate) ? STC3100_REG_MODE_RUN_MASK  : 0;
     regWr |=  (_adc_resolution<<STC3100_REG_MODE_ADCRES_POS);
+    writeByteWire(STC3100_REG_MODE, regWr); 
+    return regWr;
+}
+
+uint8_t STC3100dd::resetChargeAcc() {
+    // CG_RST=1 ~ ensure charge is cleared.
+    uint8_t regWr  =  STC3100_REG_CTRL_RST_MASK|STC3100_REG_CTRL_IO0DATA_MASK;
     writeByteWire(STC3100_REG_MODE, regWr); 
     return regWr;
 }
