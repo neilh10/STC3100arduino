@@ -130,8 +130,9 @@ float STC3100dm::snapEnergyUsed1_mAhr() {
 }
 
 void  STC3100dm::setBatteryCapacity_mAh(float batteryCapacity_mAh){
-    _batteryCapacity_mAh = batteryCapacity_mAh;
-    setBatteryFullyCharged();
+    //Only done at init, 
+    _calculatedBatteryCapacityRemaining_mAh= _batteryCapacity_mAh =_batteryCapacity_mAh;
+    // if resetCharAcc()/setBatteryFullyCharged() seems to halt the IC
     }
 void  STC3100dm::setBatteryFullyCharged(){
     _calculatedBatteryCapacityRemaining_mAh= _batteryCapacity_mAh;
