@@ -39,15 +39,17 @@ uint8_t STC3100dm::periodicTask() {
     Serial.print(F(" mA="));
     Serial.println(v.current_mA  );    
     #endif //STC3100DM_DEBUG
-   if ((v.current_mA < -0.1) || (v.current_mA > 20) ) {
+ 
+    #define STC3100_DM_CHARGE_THRESHOLD_UP_COUNT 3
+    #define STC3100_DM_CHARGE_THRESHOLD_FULL_V 4.10
+    #define STC3100_DM_CURRENT_THRESHOLD_mA 20.0
+    if ((v.current_mA < -0.1) || (v.current_mA > STC3100_DM_CURRENT_THRESHOLD_mA )) {
        //Discharging ~ or heavilt charging.
        chargeDirCounter = 0;
 
-   }else {
-       #define STC3100_DM_CHARGE_THRESHOLD_UP_COUNT 2
-            #define STC3100_DM_CHARGE_THRESHOLD_FULL_V 4.2
-            #define STC3100_DM_CURRENT_THRESHOLD_mA 5.0
-       if (++chargeDirCounter>STC3100_DM_CHARGE_THRESHOLD_UP_COUNT) {
+    } else {
+
+        if (++chargeDirCounter>STC3100_DM_CHARGE_THRESHOLD_UP_COUNT) {
             chargeDirCounter=STC3100_DM_CHARGE_THRESHOLD_UP_COUNT;
             #if defined STC3100DM_DEBUG
             Serial.print(F("STC3100dm charged? V="));
@@ -58,13 +60,14 @@ uint8_t STC3100dm::periodicTask() {
             Serial.println(_batCharge1_raw,HEX );
             #endif //STC3100DM_DEBUG
 
-            if ( (v.voltage_V >  STC3100_DM_CHARGE_THRESHOLD_FULL_V)
-            && (v.current_mA < STC3100_DM_CURRENT_THRESHOLD_mA)) {
+            if (v.voltage_V >  STC3100_DM_CHARGE_THRESHOLD_FULL_V)
+            {
                 setBatteryFullyCharged();
+                chargeDirCounter = 0;
             }
        }
-   }
-   return 0; //No event
+    }
+    return 0; //No event
 }
  
 void STC3100dm::setEnergyMarker1() {
@@ -131,12 +134,21 @@ float STC3100dm::snapEnergyUsed1_mAhr() {
 
 void  STC3100dm::setBatteryCapacity_mAh(float batteryCapacity_mAh){
     //Only done at init, 
-    _calculatedBatteryCapacityRemaining_mAh= _batteryCapacity_mAh =_batteryCapacity_mAh;
+    _calculatedBatteryCapacityRemaining_mAh= _batteryCapacity_mAh = batteryCapacity_mAh;
     // if resetCharAcc()/setBatteryFullyCharged() seems to halt the IC
+    #if defined STC3100DM_DEBUG
+    Serial.print(F("STC3100dm setBatteryCapacity "));
+    Serial.println(_batteryCapacity_mAh);
+    #endif //STC3100DM_DEBUG
     }
+
 void  STC3100dm::setBatteryFullyCharged(){
     _calculatedBatteryCapacityRemaining_mAh= _batteryCapacity_mAh;
     resetChargeAcc();
+    #if defined STC3100DM_DEBUG
+    Serial.print(F("STC3100dm setBatteryFullyCharged "));
+    Serial.println(_batteryCapacity_mAh);
+    #endif //STC3100DM_DEBUG
     }
 float STC3100dm::getEnergyAvlbl_mAhr() {
     //float energyUsed_mAhr = getEnergyUsed1_mAhr();
