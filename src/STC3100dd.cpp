@@ -83,7 +83,7 @@ uint8_t STC3100dd::updateModeReg() {
 uint8_t STC3100dd::resetChargeAcc() {
     // CG_RST=1 ~ ensure charge is cleared.
     uint8_t regWr  =  STC3100_REG_CTRL_RST_MASK|STC3100_REG_CTRL_IO0DATA_MASK;
-    writeByteWire(STC3100_REG_MODE, regWr); 
+    writeByteWire(STC3100_REG_CTRL, regWr); 
     return regWr;
 }
 
