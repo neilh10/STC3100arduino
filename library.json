@@ -1,0 +1,26 @@
+{
+  "name": "STC3100",
+  "version": "0.1",
+  "keywords": "STC3100, mAh, Coulumb, sensor, Volt,mA, ADC",
+  "description": "STC3100 battery monitor, Voltage monitor with Coulomb counter",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neilh10/STC3100arduino.git"
+  },
+  "authors": [
+    {
+      "name": "Neil Hancock",
+      "email": "neilh20+refstc3100@wLLw.net"
+    },
+  ],
+  "license": "BSD-3-Clause",
+  "frameworks": "arduino",
+  "platforms": [
+      "atmelavr",
+      "atmelsam"
+  ],
+  "export": {
+    "exclude": ["doc/*"]
+  },
+  "examples": ["examples/*/*.ino"]
+}
