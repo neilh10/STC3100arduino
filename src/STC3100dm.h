@@ -36,12 +36,12 @@ class STC3100dm : public STC3100dd
     /* Only do once at setup */
     uint8_t  dmBegin();
 
-    float snapEnergyUsed1_mAhr();
-    void  setEnergyMarker1();
+    void  snapEnergyMarker1();
+    void  setHandshake1(){_handshake1=true;}
     float getEnergyUsed1_mAhr();
 
     float getEnergyAvlbl_mAhr();
-    /* Fut: call periodically ~ 15minutes */
+    /* Call periodically 1 ~ 15minutes */
     uint8_t periodicTask();
 
     /* Internal */
@@ -49,12 +49,14 @@ class STC3100dm : public STC3100dd
     float getBatteryCharge_mAh() {return _batteryCapacity_mAh;}
     //uint8_t getBatteryCharge_percent(); // target?
 
-    private:
-    #define STC3100_DM_DEFAULT_BATTERY_MAH 2000
+    //public: allows some debugging, ideally would be private:
+    #define STC3100_DM_DEFAULT_BATTERY_MAH 4400
     int16_t _batCharge1_raw=0;
-    float    _batteryCapacity_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
-    float    _calculatedBatteryCapacityRemaining_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
-    int8_t chargeDirCounter; //Counts up for +positive charging
+    float   _energyUsed_mAhr=0;
+    float   _batteryCapacity_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
+    float   _calculatedBatteryCapacityRemaining_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
+    int8_t  _chargeDirCounter; //Counts up for +positive charging
+    bool    _handshake1=false;
 };
 
 #endif // STC3100dm_H
