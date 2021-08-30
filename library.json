@@ -1,6 +1,6 @@
 {
   "name": "STC3100",
-  "version": "0.1",
+  "version": "0.1.1",
   "keywords": "STC3100, mAh, Coulumb, sensor, Volt,mA, ADC",
   "description": "STC3100 battery monitor, Voltage monitor with Coulomb counter",
   "repository": {
