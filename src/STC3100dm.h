@@ -51,6 +51,10 @@ class STC3100dm : public STC3100dd
 
     //public: allows some debugging, ideally would be private:
     #define STC3100_DM_DEFAULT_BATTERY_MAH 4400
+    //To be realistic, the system always needs a perceived value
+    #define STC3100_DM_BATTERY_MIN_MAH 10
+    #define STC3100_DM_CHG_ACCUM_RESET 0xffff
+
     int16_t _batCharge1_raw=0;
     float   _energyUsed_mAhr=0;
     float   _batteryCapacity_mAh=STC3100_DM_DEFAULT_BATTERY_MAH;
