@@ -27,6 +27,7 @@ STC3100dd::STC3100dd(TwoWire* theI2C, uint8_t adc_resolution, uint16_t resistor_
 
 void STC3100dd::begin(){
     _i2c->begin();
+    _i2c->setWireTimeout(STC310_SETWIRETIMEOUT_MS ,true); //enable recovery from lockup
 }
 
 bool STC3100dd::start(){
@@ -94,9 +95,14 @@ uint8_t STC3100dd::readValues(){
     _i2c->write(STC3100_REG_CHARGE_LOW);
     status = _i2c->endTransmission();
     if (0 == status) {
-        _i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
-        
-        v.valid = true;
+        uint8_t numRead =_i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
+
+        if (STC3100_REG_LEN != numRead) {
+            #if defined STC3100DD_DEBUG
+            Serial.print(F("STC3100dd readValues unexpected "));
+            Serial.print(F("numRead"));
+            #endif //STC3100DD_DEBUG
+        }
         v.charge_raw = get2BytesBuf();
         v.charge_mAhr = (float) rawToCharge_mAhr(v.charge_raw);
         v.counter = get2BytesBuf();
@@ -105,9 +111,16 @@ uint8_t STC3100dd::readValues(){
         v.temperature_C = rawToTemperature_C(get2BytesBuf());
     } else {
         #if defined STC3100DD_DEBUG
-        Serial.print("STC3100dd readValues not read");
+        Serial.print(F("STC3100dd readValues not read"));
         #endif // STC3100DD_DEBUG
     }
+    uint8_t writeError = _i2c->getWriteError();
+    if (0!=writeError ) {
+            #if defined STC3100DD_DEBUG
+            Serial.print(F("STC3100dd readValues getWriteError "));
+            Serial.print(F("numRead"));
+            #endif //STC3100DD_DEBUG
+   }
     return status;
 }
 
@@ -187,6 +200,12 @@ uint16_t STC3100dd::get2BytesBuf() {
     uint8_t high = _i2c->read();
     uint16_t value = low;
     value |= high<<8;
+    #if defined STC3100DD_DEBUG
+    if (0xffff == value) {
+        Serial.print(F("STC3100dd get2BytesBuf FFFF"));
+    }
+    #endif //STC3100DD_DEBUG
+
     return value;
 }
 

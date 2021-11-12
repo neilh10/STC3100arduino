@@ -115,7 +115,6 @@ class STC3100dd
     } fgValues_t;
     
     /* Fastest interface is to read from 'v' values */
-
     fgValues_t v;
 
 
@@ -212,6 +211,15 @@ class STC3100dd
  * @return true Serial number is valid else failed CRC
  */
   bool readSerialNumber(uint8_t *serial);  
+
+  /**
+ * @brief STC310_SETWIRETIMEOUT_MS  sets 2-Wire timeout. 
+ * If the hardware I2C looks up, this defines
+ * the timeout value before the interface is reset.
+ */
+#if !defined STC310_SETWIRETIMEOUT_MS 
+  #define STC310_SETWIRETIMEOUT_MS  5000
+#endif //
 
   protected:
 
