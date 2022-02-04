@@ -88,7 +88,7 @@ uint8_t STC3100dd::resetChargeAcc() {
     return regWr;
 }
 
-uint8_t STC3100dd::readValues(){
+uint8_t STC3100dd::readValuesIc(){
     uint8_t status;
 
     _i2c->beginTransmission(_i2cAddressHex);
@@ -96,7 +96,10 @@ uint8_t STC3100dd::readValues(){
     status = _i2c->endTransmission();
     if (0 == status) {
         uint8_t numRead =_i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
-
+#define TWOWIRE_ERR_TIMEOUT 0x41
+        if (_i2c->getWireTimeoutFlag()) {
+            return TWOWIRE_ERR_TIMEOUT;
+        }
         if (STC3100_REG_LEN != numRead) {
             #if defined STC3100DD_DEBUG
             Serial.print(F("STC3100dd readValues unexpected "));
@@ -111,7 +114,8 @@ uint8_t STC3100dd::readValues(){
         v.temperature_C = rawToTemperature_C(get2BytesBuf());
     } else {
         #if defined STC3100DD_DEBUG
-        Serial.print(F("STC3100dd readValues not read"));
+        Serial.print(F("STC3100dd readValues not read. Err"));
+        Serial.print(status);
         #endif // STC3100DD_DEBUG
     }
     uint8_t writeError = _i2c->getWriteError();
@@ -121,6 +125,26 @@ uint8_t STC3100dd::readValues(){
             Serial.print(F("numRead"));
             #endif //STC3100DD_DEBUG
    }
+    return status;
+}
+uint8_t STC3100dd::readValues(){
+    uint8_t status;
+    #define TWOWIRE_RETRY_CNT 5
+    uint8_t repeatCntr=TWOWIRE_RETRY_CNT;
+    do {
+        status =  readValuesIc();
+        if (!_i2c->getWireTimeoutFlag() && (0 == status)) {
+            break; // out of whileComplete
+        }
+        _i2c->clearWireTimeoutFlag();
+        if (--repeatCntr) {
+            #if defined STC3100DD_DEBUG
+            Serial.print(F("STC3100dd serious TimeoutsError, tried and failed "));
+            Serial.print(TWOWIRE_RETRY_CNT);
+            #endif // STC3100DD_DEBUG
+        }
+
+    } while (repeatCntr);
     return status;
 }
 

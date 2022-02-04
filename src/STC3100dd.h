@@ -168,6 +168,7 @@ class STC3100dd
   String getType() {return  String(serial_number[0],HEX);}
 
   uint8_t readValues();
+  uint8_t readValuesIc();
 
 /**
  * @brief Gets the stored charge.
