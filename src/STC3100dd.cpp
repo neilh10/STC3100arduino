@@ -27,7 +27,9 @@ STC3100dd::STC3100dd(TwoWire* theI2C, uint8_t adc_resolution, uint16_t resistor_
 
 void STC3100dd::begin(){
     _i2c->begin();
+#if defined(WIRE_HAS_TIMEOUT)
     _i2c->setWireTimeout(STC310_SETWIRETIMEOUT_MS ,true); //enable recovery from lockup
+#endif
 }
 
 bool STC3100dd::start(){
@@ -97,9 +99,16 @@ uint8_t STC3100dd::readValuesIc(){
     if (0 == status) {
         uint8_t numRead =_i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
 #define TWOWIRE_ERR_TIMEOUT 0x41
+#if defined(WIRE_HAS_TIMEOUT)
         if (_i2c->getWireTimeoutFlag()) {
             return TWOWIRE_ERR_TIMEOUT;
         }
+#elif defined(ARDUINO_ARCH_STM32)
+        I2C_HandleTypeDef * hi2c = _i2c->getHandle();
+        if (hi2c && HAL_I2C_GetError(hi2c) != HAL_I2C_ERROR_NONE) {
+            return TWOWIRE_ERR_TIMEOUT;
+        }
+#endif
         if (STC3100_REG_LEN != numRead) {
             #if defined STC3100DD_DEBUG
             Serial.print(F("STC3100dd readValues unexpected "));
@@ -133,10 +142,17 @@ uint8_t STC3100dd::readValues(){
     uint8_t repeatCntr=TWOWIRE_RETRY_CNT;
     do {
         status =  readValuesIc();
+#if defined(WIRE_HAS_TIMEOUT)
         if (!_i2c->getWireTimeoutFlag() && (0 == status)) {
             break; // out of whileComplete
         }
         _i2c->clearWireTimeoutFlag();
+  #elif defined(ARDUINO_ARCH_STM32)
+        I2C_HandleTypeDef * hi2c = _i2c->getHandle();
+        if (hi2c && HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_NONE && (0 == status)) {
+            break;
+        }
+#endif      
         if (--repeatCntr) {
             #if defined STC3100DD_DEBUG
             Serial.print(F("STC3100dd serious TimeoutsError, tried and failed "));
