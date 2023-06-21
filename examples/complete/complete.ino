@@ -13,7 +13,7 @@ Time  ,  Pass, ChgCounter,  Vbat, Current,  Tempeature, Charge_mAh, charge_raw
 #include <Arduino.h>
 #include "STC3100dd.h"
 
-#define USE_RTCLIB Sodaq_DS3231
+// #define USE_RTCLIB Sodaq_DS3231
 #if defined USE_RTCLIB 
 #include <Sodaq_DS3231.h>
 USE_RTCLIB  rtcExtPhy;
@@ -26,8 +26,10 @@ USE_RTCLIB  rtcExtPhy;
     #define SERIAL_PORT_USBVIRTUAL Serial
 #endif
 
-STC3100dd  battMon(STC3100_REG_MODE_ADCRES_12BITS,STC3100_R_SERIES_mOhms); 
-uint32_t  counter =0;
+#define STC3100_RESISTOR    ((uint16_t) 10)  // 10 mOhms series
+
+STC3100dd battMon(STC3100_REG_MODE_ADCRES_14BITS, STC3100_RESISTOR); 
+uint32_t counter = 0;
 
 #if defined USE_RTCLIB 
 //This assumes an RTC in UTC, and need to adapt to local time
@@ -43,7 +45,7 @@ uint32_t getNowSecs2kTz(void) {
 }
 #endif //defined USE_RTCLIB 
 
-#define USE_POWER
+// #define USE_POWER
 #if defined USE_POWER
 const int8_t powerPin = 22;
 #define PowerOn()  digitalWrite(powerPin, HIGH)
@@ -58,17 +60,18 @@ void setup(void) {
     SERIAL.begin(SERIAL_BAUD);
 
     // Enter <CR> to start
-    //while (!SERIAL.available());
+    while (!SERIAL.available());
 
     SERIAL.println("STC3100 Raw Data");
-
+    Wire.setSDA(PB11);
+    Wire.setSCL(PB10);
     battMon.begin();  //Wire.begin();
     bool fStatus = battMon.start();
     if (fStatus) {
-        SERIAL.print("STC3100 sn ");
+        SERIAL.print("STC3100 S/N: ");
         String sn(battMon.getSn());
         SERIAL.print(sn);
-        SERIAL.print(" Type ");
+        SERIAL.print(" Type: 0x");
         SERIAL.println(battMon.getType());
 
     } else {SERIAL.println("STC3100 start failed");}
@@ -107,43 +110,34 @@ void measureBattery() {
         SERIAL.println(" Failed to get new reading "); 
         return;     
     }
-    SERIAL.print( counter);
-    SERIAL.print(", ");   
-    SERIAL.print( battMon.v.counter);
-    SERIAL.print(", ");    
-    SERIAL.print( battMon.v.voltage_V,4); 
-    SERIAL.print(",V, ");
-
-    SERIAL.print(battMon.v.current_mA);
-    SERIAL.print(",mA, ");
-    SERIAL.print(battMon.v.temperature_C);
-    SERIAL.print(",C, ");
-    SERIAL.print(battMon.v.charge_mAhr);
-    SERIAL.print(",mAh, 0x");
-    SERIAL.print(battMon.v.charge_raw,HEX);
-    SERIAL.println();
-
+    char log_buf[128] = {};
+    snprintf(log_buf, sizeof(log_buf), "#%d, cnt %d, %.3fV, %+.1fmA, %.1fC, %.2fmAh, chrg raw %d",
+            counter,
+            battMon.v.counter,
+            battMon.v.voltage_V,
+            battMon.v.current_mA,
+            battMon.v.temperature_C,
+            battMon.v.charge_mAhr,
+            battMon.v.charge_raw);
+    SERIAL.println(log_buf);
 }
 
-    //with 10,000 Every 20passes the above takes 1second longer - try 9,950
-    // with 9,950 EVery 300=458-150 only takes 9Secs 300*10sec=3,000secs - try 9,940
-#define MEASUREMENT_POLL  9940
+#define MEASUREMENT_INTERVAL_MS  1000
 void loop(void) {
-
-
-    counter++;
-
-    #if defined USE_POWER
-    if (counter &0x01) {
-        SERIAL.println("Power ON");
-        PowerOn();
-    }else {
-        SERIAL.println("Power OFF");
-        PowerOff();
+    static uint32_t last_meas;
+    uint32_t now = millis();
+    if (now - last_meas > MEASUREMENT_INTERVAL_MS) {
+        last_meas = now;
+        counter++;
+#if defined USE_POWER
+        if (counter % 4 == 0) {
+            SERIAL.println("Power ON");
+            PowerOn();
+        } else if (counter % 4 == 2) {
+            SERIAL.println("Power OFF");
+            PowerOff();
+        }
+#endif //USE_POWER
+        measureBattery();
     }
-    #endif //USE_POWER
-    delay(MEASUREMENT_POLL/2);
-    measureBattery();
-    delay(MEASUREMENT_POLL/2);
-    measureBattery();
 }
