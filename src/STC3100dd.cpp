@@ -11,7 +11,7 @@
 
 #include "STC3100dd.h"
 
-
+// #define STC3100DD_DEBUG
 
 STC3100dd::STC3100dd(uint8_t adc_resolution, uint16_t resistor_value){
     _i2c           = &Wire;
@@ -41,8 +41,13 @@ bool STC3100dd::start(){
     }
     _detectedPresent = true;
     #if defined STC3100DD_DEBUG
+    uint16_t reg = getReadingWire(STC3100_REG_MODE);
+    uint8_t lo = reg & 0xFF;
+    uint8_t hi = (reg >> 8) & 0xFF;
+    Serial.print("STC3100dd STC3100_REG_MODE 0x");
+    Serial.println(lo, HEX);
     Serial.print("STC3100dd STC3100_REG_CTRL 0x");
-    Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
+    Serial.println(hi, HEX);
     #endif // STC3100DD_DEBUG
     
     //Reset Charge Acc to 0
@@ -51,8 +56,14 @@ bool STC3100dd::start(){
     updateModeReg();
 
     #if defined STC3100DD_DEBUG
-    Serial.print("STC3100dd After initCTL 0x");
-    Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
+    reg = getReadingWire(STC3100_REG_MODE);
+    lo = reg & 0xFF;
+    hi = (reg >> 8) & 0xFF;
+    Serial.println("STC3100dd After initCTL");    
+    Serial.print("STC3100dd STC3100_REG_MODE 0x");
+    Serial.println(lo, HEX);
+    Serial.print("STC3100dd STC3100_REG_CTRL 0x");
+    Serial.println(hi, HEX);
     #endif // STC3100DD_DEBUG
 
     return true;
@@ -118,8 +129,8 @@ uint8_t STC3100dd::readValuesIc(){
             Serial.print(F("numRead"));
             #endif //STC3100DD_DEBUG
         }
-        v.charge_raw = get2BytesBuf();
-        v.charge_mAhr = (float) rawToCharge_mAhr(v.charge_raw);
+        v.charge_raw = (int16_t) get2BytesBuf();
+        v.charge_mAhr = rawToCharge_mAhr(v.charge_raw);
         v.counter = get2BytesBuf();
         v.current_mA = rawToCurrent_mA(get2BytesBuf());
         v.voltage_V = get2BytesBuf() * STC3100_VFACTOR;
@@ -245,7 +256,7 @@ uint16_t STC3100dd::get2BytesBuf() {
     value |= high<<8;
     #if defined STC3100DD_DEBUG
     if (0xffff == value) {
-        Serial.print(F("STC3100dd get2BytesBuf FFFF"));
+        Serial.println(F("STC3100dd get2BytesBuf FFFF"));
     }
     #endif //STC3100DD_DEBUG
 
