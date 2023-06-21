@@ -64,8 +64,11 @@ String STC3100dd::getSn(void)   {
         sn += String(F("None"));
     } else {
         sn.reserve(STC3100_ID_LEN+1);
-        for (int snlp=1;snlp<(STC3100_ID_LEN-2);snlp++) {
-                sn +=String(serial_number[snlp],HEX);
+        for (int snlp = 1; snlp < STC3100_ID_LEN - 1; snlp++) {
+            if (serial_number[snlp] < 0x10) {
+                sn += '0';
+            }
+            sn += String(serial_number[snlp], HEX);
         }
     }
     return sn;
