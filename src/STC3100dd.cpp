@@ -107,6 +107,7 @@ uint8_t STC3100dd::resetChargeAcc() {
 uint8_t STC3100dd::readValuesIc(){
     uint8_t status;
 
+    v.valid = false;
     _i2c->beginTransmission(_i2cAddressHex);
     _i2c->write(STC3100_REG_CHARGE_LOW);
     status = _i2c->endTransmission();
@@ -135,6 +136,7 @@ uint8_t STC3100dd::readValuesIc(){
         v.current_mA = rawToCurrent_mA(get2BytesBuf());
         v.voltage_V = get2BytesBuf() * STC3100_VFACTOR;
         v.temperature_C = rawToTemperature_C(get2BytesBuf());
+        v.valid = true;
     } else {
         #if defined STC3100DD_DEBUG
         Serial.print(F("STC3100dd readValues not read. Err"));
