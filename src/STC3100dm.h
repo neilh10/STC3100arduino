@@ -31,6 +31,7 @@ consumption when the battery is not charging (negative current)
 class STC3100dm : public STC3100dd 
 {
     public: 
+    using STC3100dd::STC3100dd;
     /* Only do once at setup, before dmBegin */
     void setBatteryCapacity_mAh(float batteryCapacity_mAh);
     /* Only do once at setup */
