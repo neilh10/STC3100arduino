@@ -11,7 +11,7 @@
 
 #include "STC3100dd.h"
 
-
+// #define STC3100DD_DEBUG
 
 STC3100dd::STC3100dd(uint8_t adc_resolution, uint16_t resistor_value){
     _i2c           = &Wire;
@@ -27,7 +27,9 @@ STC3100dd::STC3100dd(TwoWire* theI2C, uint8_t adc_resolution, uint16_t resistor_
 
 void STC3100dd::begin(){
     _i2c->begin();
+#if defined(WIRE_HAS_TIMEOUT)
     _i2c->setWireTimeout(STC310_SETWIRETIMEOUT_MS ,true); //enable recovery from lockup
+#endif
 }
 
 bool STC3100dd::start(){
@@ -39,8 +41,13 @@ bool STC3100dd::start(){
     }
     _detectedPresent = true;
     #if defined STC3100DD_DEBUG
+    uint16_t reg = getReadingWire(STC3100_REG_MODE);
+    uint8_t lo = reg & 0xFF;
+    uint8_t hi = (reg >> 8) & 0xFF;
+    Serial.print("STC3100dd STC3100_REG_MODE 0x");
+    Serial.println(lo, HEX);
     Serial.print("STC3100dd STC3100_REG_CTRL 0x");
-    Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
+    Serial.println(hi, HEX);
     #endif // STC3100DD_DEBUG
     
     //Reset Charge Acc to 0
@@ -49,8 +56,14 @@ bool STC3100dd::start(){
     updateModeReg();
 
     #if defined STC3100DD_DEBUG
-    Serial.print("STC3100dd After initCTL 0x");
-    Serial.println(getReadingWire(STC3100_REG_MODE), HEX);
+    reg = getReadingWire(STC3100_REG_MODE);
+    lo = reg & 0xFF;
+    hi = (reg >> 8) & 0xFF;
+    Serial.println("STC3100dd After initCTL");    
+    Serial.print("STC3100dd STC3100_REG_MODE 0x");
+    Serial.println(lo, HEX);
+    Serial.print("STC3100dd STC3100_REG_CTRL 0x");
+    Serial.println(hi, HEX);
     #endif // STC3100DD_DEBUG
 
     return true;
@@ -62,8 +75,11 @@ String STC3100dd::getSn(void)   {
         sn += String(F("None"));
     } else {
         sn.reserve(STC3100_ID_LEN+1);
-        for (int snlp=1;snlp<(STC3100_ID_LEN-2);snlp++) {
-                sn +=String(serial_number[snlp],HEX);
+        for (int snlp = 1; snlp < STC3100_ID_LEN - 1; snlp++) {
+            if (serial_number[snlp] < 0x10) {
+                sn += '0';
+            }
+            sn += String(serial_number[snlp], HEX);
         }
     }
     return sn;
@@ -91,27 +107,36 @@ uint8_t STC3100dd::resetChargeAcc() {
 uint8_t STC3100dd::readValuesIc(){
     uint8_t status;
 
+    v.valid = false;
     _i2c->beginTransmission(_i2cAddressHex);
     _i2c->write(STC3100_REG_CHARGE_LOW);
     status = _i2c->endTransmission();
     if (0 == status) {
         uint8_t numRead =_i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
 #define TWOWIRE_ERR_TIMEOUT 0x41
+#if defined(WIRE_HAS_TIMEOUT)
         if (_i2c->getWireTimeoutFlag()) {
             return TWOWIRE_ERR_TIMEOUT;
         }
+#elif defined(ARDUINO_ARCH_STM32)
+        I2C_HandleTypeDef * hi2c = _i2c->getHandle();
+        if (hi2c && HAL_I2C_GetError(hi2c) != HAL_I2C_ERROR_NONE) {
+            return TWOWIRE_ERR_TIMEOUT;
+        }
+#endif
         if (STC3100_REG_LEN != numRead) {
             #if defined STC3100DD_DEBUG
             Serial.print(F("STC3100dd readValues unexpected "));
             Serial.print(F("numRead"));
             #endif //STC3100DD_DEBUG
         }
-        v.charge_raw = get2BytesBuf();
-        v.charge_mAhr = (float) rawToCharge_mAhr(v.charge_raw);
+        v.charge_raw = (int16_t) get2BytesBuf();
+        v.charge_mAhr = rawToCharge_mAhr(v.charge_raw);
         v.counter = get2BytesBuf();
         v.current_mA = rawToCurrent_mA(get2BytesBuf());
         v.voltage_V = get2BytesBuf() * STC3100_VFACTOR;
         v.temperature_C = rawToTemperature_C(get2BytesBuf());
+        v.valid = true;
     } else {
         #if defined STC3100DD_DEBUG
         Serial.print(F("STC3100dd readValues not read. Err"));
@@ -133,10 +158,17 @@ uint8_t STC3100dd::readValues(){
     uint8_t repeatCntr=TWOWIRE_RETRY_CNT;
     do {
         status =  readValuesIc();
+#if defined(WIRE_HAS_TIMEOUT)
         if (!_i2c->getWireTimeoutFlag() && (0 == status)) {
             break; // out of whileComplete
         }
         _i2c->clearWireTimeoutFlag();
+  #elif defined(ARDUINO_ARCH_STM32)
+        I2C_HandleTypeDef * hi2c = _i2c->getHandle();
+        if (hi2c && HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_NONE && (0 == status)) {
+            break;
+        }
+#endif      
         if (--repeatCntr) {
             #if defined STC3100DD_DEBUG
             Serial.print(F("STC3100dd serious TimeoutsError, tried and failed "));
@@ -226,7 +258,7 @@ uint16_t STC3100dd::get2BytesBuf() {
     value |= high<<8;
     #if defined STC3100DD_DEBUG
     if (0xffff == value) {
-        Serial.print(F("STC3100dd get2BytesBuf FFFF"));
+        Serial.println(F("STC3100dd get2BytesBuf FFFF"));
     }
     #endif //STC3100DD_DEBUG
 
