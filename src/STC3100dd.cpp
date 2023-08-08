@@ -11,7 +11,6 @@
 
 #include "STC3100dd.h"
 
-// #define STC3100DD_DEBUG
 
 STC3100dd::STC3100dd(uint8_t adc_resolution, uint16_t resistor_value){
     _i2c           = &Wire;
@@ -74,13 +73,22 @@ String STC3100dd::getSn(void)   {
     if (!_detectedPresent) {
         sn += String(F("None"));
     } else {
-        sn.reserve(STC3100_ID_LEN+1);
+        sn.reserve(2*STC3100_ID_LEN+2); //Number of Ascii characcters for 8*bytes
+        #if !defined(ARDUINO_ARCH_STM32)
+        for (int snlp=1;snlp<(STC3100_ID_LEN-1);snlp++) {
+                //1st byte is ID (STC3100=0x10) last byte is CRC 
+                uint8_t temp_num=serial_number[snlp];
+                sn +=String((temp_num>>4) & 0x0f,HEX);
+                sn +=String((temp_num & 0x0f),HEX);
+        }
+        #else
         for (int snlp = 1; snlp < STC3100_ID_LEN - 1; snlp++) {
             if (serial_number[snlp] < 0x10) {
                 sn += '0';
             }
             sn += String(serial_number[snlp], HEX);
         }
+        #endif
     }
     return sn;
 }
@@ -115,6 +123,7 @@ uint8_t STC3100dd::readValuesIc(){
         uint8_t numRead =_i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
 #define TWOWIRE_ERR_TIMEOUT 0x41
 #if defined(WIRE_HAS_TIMEOUT)
+#error WIRE
         if (_i2c->getWireTimeoutFlag()) {
             return TWOWIRE_ERR_TIMEOUT;
         }
@@ -163,7 +172,7 @@ uint8_t STC3100dd::readValues(){
             break; // out of whileComplete
         }
         _i2c->clearWireTimeoutFlag();
-  #elif defined(ARDUINO_ARCH_STM32)
+#elif defined(ARDUINO_ARCH_STM32)
         I2C_HandleTypeDef * hi2c = _i2c->getHandle();
         if (hi2c && HAL_I2C_GetError(hi2c) == HAL_I2C_ERROR_NONE && (0 == status)) {
             break;
