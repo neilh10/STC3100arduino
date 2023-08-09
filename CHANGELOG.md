@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.3.0] 2023-08-08
+
+### Added
+ARDUINO_ARCH_STM32 from https://github.com/haydenth
+
+### Fixed
+- Listing the serial number
+
 ## [0.2.0] 2022-02-03
 _First release._
 Build for Mayfly/ Mega1284 - extensive testing, 
