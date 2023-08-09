@@ -26,7 +26,7 @@ STC3100dd::STC3100dd(TwoWire* theI2C, uint8_t adc_resolution, uint16_t resistor_
 
 void STC3100dd::begin(){
     _i2c->begin();
-#if defined(WIRE_HAS_TIMEOUT)
+#if defined(ARDUINO_ARCH_AVR)
     _i2c->setWireTimeout(STC310_SETWIRETIMEOUT_MS ,true); //enable recovery from lockup
 #endif
 }
@@ -122,7 +122,7 @@ uint8_t STC3100dd::readValuesIc(){
     if (0 == status) {
         uint8_t numRead =_i2c->requestFrom(_i2cAddressHex, STC3100_REG_LEN );
 #define TWOWIRE_ERR_TIMEOUT 0x41
-#if defined(WIRE_HAS_TIMEOUT)
+#if defined(ARDUINO_ARCH_AVR)
         if (_i2c->getWireTimeoutFlag()) {
             return TWOWIRE_ERR_TIMEOUT;
         }
@@ -166,7 +166,7 @@ uint8_t STC3100dd::readValues(){
     uint8_t repeatCntr=TWOWIRE_RETRY_CNT;
     do {
         status =  readValuesIc();
-#if defined(WIRE_HAS_TIMEOUT)
+#if defined(ARDUINO_ARCH_AVR)
         if (!_i2c->getWireTimeoutFlag() && (0 == status)) {
             break; // out of whileComplete
         }
