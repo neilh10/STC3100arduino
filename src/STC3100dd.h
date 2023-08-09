@@ -13,6 +13,13 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+// WIRE_HAS_TIMEOUT is defined by default, unless WIRE_HAS_NO_TIMEOUT is defined for cc
+#if !defined(WIRE_HAS_NO_TIMEOUT)
+#if !defined(WIRE_HAS_TIMEOUT)
+#define WIRE_HAS_TIMEOUT 1
+#endif // WIRE_HAS_TIMEOUT
+#endif // WIRE_HAS_NO_TIMEOUT)*/
+
 /*Address of the STC3100 register --------------------------------------------*/
 #define STC3100_REG_MODE                 0x00 /*Mode Register                 */
 #define STC3100_REG_CTRL                 0x01 /*Control and Status Register   */
