@@ -73,22 +73,14 @@ String STC3100dd::getSn(void)   {
     if (!_detectedPresent) {
         sn += String(F("None"));
     } else {
-        sn.reserve(2*STC3100_ID_LEN+2); //Number of Ascii characcters for 8*bytes
-        #if !defined(ARDUINO_ARCH_STM32)
-        for (int snlp=1;snlp<(STC3100_ID_LEN-1);snlp++) {
-                //1st byte is ID (STC3100=0x10) last byte is CRC 
-                uint8_t temp_num=serial_number[snlp];
-                sn +=String((temp_num>>4) & 0x0f,HEX);
-                sn +=String((temp_num & 0x0f),HEX);
-        }
-        #else
+        sn.reserve(2*STC3100_ID_LEN); //Number of Ascii characcters for 6*bytes
         for (int snlp = 1; snlp < STC3100_ID_LEN - 1; snlp++) {
+            // If converted byte has leading zero need to add before using String()
             if (serial_number[snlp] < 0x10) {
                 sn += '0';
             }
             sn += String(serial_number[snlp], HEX);
         }
-        #endif // ! ARDUINO_ARCH_STM32
     }
     return sn;
 }
