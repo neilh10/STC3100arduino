@@ -51,7 +51,8 @@ bool STC3100dd::start(){
     
     //Reset Charge Acc to 0
     resetChargeAcc();
-
+    //Set Operating mode and resolution
+    setModeOperateRun();
     updateModeReg();
 
     #if defined STC3100DD_DEBUG
@@ -66,6 +67,33 @@ bool STC3100dd::start(){
     #endif // STC3100DD_DEBUG
 
     return true;
+}
+
+void STC3100dd::end(){
+    #if defined STC3100DD_DEBUG
+    uint16_t reg = getReadingWire(STC3100_REG_MODE);
+    uint8_t lo = reg & 0xFF;
+    uint8_t hi = (reg >> 8) & 0xFF;
+    Serial.print("STC3100dd STC3100_REG_MODE 0x");
+    Serial.println(lo, HEX);
+    Serial.print("STC3100dd STC3100_REG_CTRL 0x");
+    Serial.println(hi, HEX);
+    #endif // STC3100DD_DEBUG
+
+    //Set Standby mode
+    setModeOperateStandby();
+    updateModeReg();
+
+    #if defined STC3100DD_DEBUG
+    reg = getReadingWire(STC3100_REG_MODE);
+    lo = reg & 0xFF;
+    hi = (reg >> 8) & 0xFF;
+    Serial.println("STC3100dd After deinitCTL");    
+    Serial.print("STC3100dd STC3100_REG_MODE 0x");
+    Serial.println(lo, HEX);
+    Serial.print("STC3100dd STC3100_REG_CTRL 0x");
+    Serial.println(hi, HEX);
+    #endif // STC3100DD_DEBUG
 }
 
 String STC3100dd::getSn(void)   {
