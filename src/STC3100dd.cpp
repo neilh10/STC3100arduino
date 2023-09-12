@@ -53,7 +53,7 @@ bool STC3100dd::start(){
     resetChargeAcc();
     //Set Operating mode and resolution
     setModeOperateRun();
-    updateModeReg();
+    uint8_t mode = updateModeReg();
 
     #if defined STC3100DD_DEBUG
     reg = getReadingWire(STC3100_REG_MODE);
@@ -66,10 +66,10 @@ bool STC3100dd::start(){
     Serial.println(hi, HEX);
     #endif // STC3100DD_DEBUG
 
-    return true;
+    return (mode & STC3100_REG_MODE_RUN_MASK) == STC3100_REG_MODE_RUN_MASK;
 }
 
-void STC3100dd::end(){
+bool STC3100dd::end(){
     #if defined STC3100DD_DEBUG
     uint16_t reg = getReadingWire(STC3100_REG_MODE);
     uint8_t lo = reg & 0xFF;
@@ -82,7 +82,7 @@ void STC3100dd::end(){
 
     //Set Standby mode
     setModeOperateStandby();
-    updateModeReg();
+    uint8_t mode = updateModeReg();
 
     #if defined STC3100DD_DEBUG
     reg = getReadingWire(STC3100_REG_MODE);
@@ -94,6 +94,8 @@ void STC3100dd::end(){
     Serial.print("STC3100dd STC3100_REG_CTRL 0x");
     Serial.println(hi, HEX);
     #endif // STC3100DD_DEBUG
+
+    return (mode & STC3100_REG_MODE_RUN_MASK) == 0U;
 }
 
 String STC3100dd::getSn(void)   {
@@ -121,8 +123,10 @@ uint8_t STC3100dd::updateModeReg() {
     // Start gauge -Clock AutoDetect, ADC, CG_RUN
     uint8_t regWr = (_operate) ? STC3100_REG_MODE_RUN_MASK  : 0;
     regWr |=  (_adc_resolution<<STC3100_REG_MODE_ADCRES_POS);
-    writeByteWire(STC3100_REG_MODE, regWr); 
-    return regWr;
+    writeByteWire(STC3100_REG_MODE, regWr);
+    // Read back register value
+    uint8_t regRd = getReadingWire(STC3100_REG_MODE) & 0xFF;
+    return regRd;
 }
 
 uint8_t STC3100dd::resetChargeAcc() {
