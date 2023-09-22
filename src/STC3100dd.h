@@ -147,9 +147,15 @@ class STC3100dd
  * If the serial number can be read and confirmed, this function will set the
  * chip to start taking readings.
  * 
- * @return true When serial is read and confirmed else false
+ * @return true When serial is read, operating mode set and confirmed else false
  */
   bool start();
+  /**
+ * @brief end() will put sensor to standby mode
+ * 
+ * @return true When standby mode set and confirmed else false
+ */
+  bool end();
 
   void    setAdcResolution(uint8_t adc_resolution=STC3100_REG_MODE_ADCRES_14BITS);
   uint8_t getAdcResolution() {return _adc_resolution;}
@@ -329,7 +335,7 @@ The temperature of 0° C corresponds to code 0.
 
   uint16_t _current_resistor_milliohms = STC3100_R_SERIES_mOhms;
   uint8_t _adc_resolution = 0;
-  bool _operate = true;
+  bool _operate = false;
   bool _detectedPresent = false;
 
   /**
